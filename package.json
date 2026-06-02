@@ -1,0 +1,9 @@
+{
+  "name": "web-bookrec",
+  "version": "1.0.0",
+  "private": true,
+  "dependencies": {
+    "@notionhq/client": "^2.2.15",
+    "express": "^5.2.1"
+  }
+}

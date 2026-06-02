@@ -1,0 +1,1842 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>书单推荐</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@600;700&family=Cormorant+Garamond:wght@400;500;600;700&family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  <style>
+    /* ========== CSS Custom Properties ========== */
+    :root {
+      --color-primary: #94A3B8;
+      --color-on-primary: #0F172A;
+      --color-secondary: #F59E0B;
+      --color-accent: #F59E0B;
+      --color-background: #0B1120;
+      --color-foreground: #E2E8F0;
+      --color-card: #1E293B;
+      --color-card-foreground: #E2E8F0;
+      --color-muted: #334155;
+      --color-muted-foreground: #94A3B8;
+      --color-border: #334155;
+      --color-destructive: #EF4444;
+      --color-ring: #F59E0B;
+      --color-success: #22C55E;
+
+      --font-title: 'Cormorant Garamond', Georgia, serif;
+      --font-body: 'Crimson Pro', Georgia, serif;
+      --font-tag: 'Cinzel', 'Times New Roman', serif;
+
+      --radius-sm: 4px;
+      --radius-md: 6px;
+      --radius-lg: 8px;
+      --radius-xl: 12px;
+
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.08), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.1), 0 2px 4px rgba(0,0,0,0.06);
+      --shadow-lg: 0 10px 25px rgba(0,0,0,0.12), 0 4px 8px rgba(0,0,0,0.06);
+
+      --space-2: 8px;
+      --space-3: 12px;
+      --space-4: 16px;
+      --space-5: 20px;
+      --space-6: 24px;
+      --space-8: 32px;
+
+      --max-width: 1200px;
+      --header-height: 64px;
+    }
+
+    /* ========== Reset & Base ========== */
+    *, *::before, *::after {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    html {
+      font-size: 16px;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+    }
+
+    body {
+      font-family: var(--font-body);
+      font-size: 1rem;
+      line-height: 1.7;
+      color: var(--color-foreground);
+      background-color: var(--color-background);
+      min-height: 100vh;
+    }
+
+    /* ========== Header ========== */
+    .header {
+      position: sticky;
+      top: 0;
+      z-index: 50;
+      background: var(--color-background);
+      border-bottom: 1px solid var(--color-border);
+      backdrop-filter: blur(8px);
+    }
+
+    .header-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 var(--space-6);
+      height: var(--header-height);
+      display: flex;
+      align-items: center;
+      gap: var(--space-4);
+    }
+
+    .header-title {
+      font-family: var(--font-title);
+      font-size: 1.75rem;
+      font-weight: 600;
+      color: var(--color-foreground);
+      white-space: nowrap;
+      letter-spacing: -0.01em;
+    }
+
+    .header-search {
+      flex: 1;
+      max-width: 360px;
+      position: relative;
+    }
+
+    .header-search svg {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--color-muted-foreground);
+      pointer-events: none;
+    }
+
+    .header-search input {
+      width: 100%;
+      height: 40px;
+      padding: 0 var(--space-3) 0 38px;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 0.938rem;
+      background: var(--color-card);
+      color: var(--color-foreground);
+      transition: border-color 200ms ease, box-shadow 200ms ease;
+    }
+
+    .header-search input:focus {
+      outline: none;
+      border-color: var(--color-ring);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+
+    .header-search input::placeholder {
+      color: var(--color-muted-foreground);
+    }
+
+    .btn-add {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 40px;
+      padding: 0 var(--space-5);
+      border: none;
+      border-radius: var(--radius-md);
+      background: var(--color-accent);
+      color: #FFFFFF;
+      font-family: var(--font-body);
+      font-size: 0.938rem;
+      font-weight: 500;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 200ms ease, transform 100ms ease;
+    }
+
+    .btn-add:hover {
+      background: #D97706;
+    }
+
+    .btn-add:active {
+      transform: scale(0.97);
+    }
+
+    .btn-add:focus-visible {
+      outline: 2px solid var(--color-ring);
+      outline-offset: 2px;
+    }
+
+    /* ========== Filter Bar ========== */
+    .filter-bar {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: var(--space-4) var(--space-6);
+      display: flex;
+      gap: var(--space-3);
+      flex-wrap: wrap;
+    }
+
+    .filter-select {
+      height: 36px;
+      padding: 0 32px 0 var(--space-3);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-card);
+      color: var(--color-foreground);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      cursor: pointer;
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2394A3B8' stroke-width='2'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 10px center;
+      transition: border-color 200ms ease;
+    }
+
+    .filter-select:focus {
+      outline: none;
+      border-color: var(--color-ring);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+
+    .filter-active {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      height: 28px;
+      padding: 0 8px;
+      border: none;
+      border-radius: var(--radius-sm);
+      background: var(--color-muted);
+      color: var(--color-muted-foreground);
+      font-family: var(--font-body);
+      font-size: 0.813rem;
+      cursor: pointer;
+      transition: background 200ms ease, color 200ms ease;
+    }
+
+    .filter-active:hover {
+      background: var(--color-border);
+      color: var(--color-foreground);
+    }
+
+    .filter-active svg {
+      width: 12px;
+      height: 12px;
+    }
+
+    /* ========== Main Content ========== */
+    .main {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 var(--space-6) var(--space-8);
+    }
+
+    /* ========== Card Grid ========== */
+    .card-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--space-5);
+    }
+
+    @media (max-width: 1023px) {
+      .card-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 639px) {
+      .card-grid { grid-template-columns: 1fr; }
+    }
+
+    .book-card {
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      box-shadow: var(--shadow-sm);
+      transition: transform 200ms ease, box-shadow 200ms ease;
+      cursor: pointer;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+      position: relative;
+    }
+
+    .book-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+
+    .book-card:focus-visible {
+      outline: 2px solid var(--color-ring);
+      outline-offset: 2px;
+    }
+
+    .book-card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      gap: var(--space-2);
+    }
+
+    .book-title {
+      font-family: var(--font-title);
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--color-foreground);
+      line-height: 1.3;
+      word-break: break-word;
+    }
+
+    .book-meta {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      flex-wrap: wrap;
+      font-size: 0.875rem;
+      color: var(--color-muted-foreground);
+    }
+
+    .book-meta-sep {
+      width: 3px;
+      height: 3px;
+      border-radius: 50%;
+      background: var(--color-border);
+    }
+
+    .book-tags {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+
+    .book-tag {
+      font-family: var(--font-tag);
+      font-size: 0.625rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      background: var(--color-muted);
+      color: var(--color-muted-foreground);
+    }
+
+    .book-review {
+      font-size: 0.875rem;
+      color: var(--color-muted-foreground);
+      line-height: 1.6;
+      display: -webkit-box;
+      -webkit-line-clamp: 3;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+      font-style: italic;
+    }
+
+    .book-review.expanded {
+      -webkit-line-clamp: unset;
+      display: block;
+    }
+
+    .book-card .external-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: auto;
+      font-size: 0.813rem;
+      color: var(--color-primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 200ms ease;
+    }
+
+    .book-card .external-link:hover {
+      color: var(--color-accent);
+    }
+
+    .book-card .external-link svg {
+      width: 14px;
+      height: 14px;
+    }
+
+    /* ========== States ========== */
+
+    /* Skeleton loading */
+    .skeleton-card {
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: var(--space-5);
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-3);
+    }
+
+    .skeleton {
+      background: linear-gradient(90deg, var(--color-muted) 25%, #475569 50%, var(--color-muted) 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-sm);
+    }
+
+    .skeleton-title {
+      height: 24px;
+      width: 70%;
+    }
+
+    .skeleton-meta {
+      height: 16px;
+      width: 50%;
+    }
+
+    .skeleton-tags {
+      height: 20px;
+      width: 80%;
+    }
+
+    .skeleton-text {
+      height: 14px;
+      width: 100%;
+    }
+
+    .skeleton-text-short {
+      height: 14px;
+      width: 60%;
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    /* Empty state */
+    .empty-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-8) var(--space-6);
+      text-align: center;
+      min-height: 300px;
+    }
+
+    .empty-state.visible {
+      display: flex;
+    }
+
+    .empty-icon {
+      width: 64px;
+      height: 64px;
+      color: var(--color-border);
+      margin-bottom: var(--space-4);
+    }
+
+    .empty-title {
+      font-family: var(--font-title);
+      font-size: 1.375rem;
+      font-weight: 600;
+      color: var(--color-foreground);
+      margin-bottom: var(--space-2);
+    }
+
+    .empty-desc {
+      font-size: 0.938rem;
+      color: var(--color-muted-foreground);
+      margin-bottom: var(--space-5);
+      max-width: 360px;
+    }
+
+    .btn-empty {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 40px;
+      padding: 0 var(--space-5);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-card);
+      color: var(--color-foreground);
+      font-family: var(--font-body);
+      font-size: 0.938rem;
+      cursor: pointer;
+      transition: border-color 200ms ease;
+    }
+
+    .btn-empty:hover {
+      border-color: var(--color-ring);
+    }
+
+    /* Error state */
+    .error-state {
+      display: none;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-8) var(--space-6);
+      text-align: center;
+      min-height: 300px;
+    }
+
+    .error-state.visible {
+      display: flex;
+    }
+
+    .error-icon {
+      width: 48px;
+      height: 48px;
+      color: var(--color-destructive);
+      margin-bottom: var(--space-4);
+    }
+
+    .error-message {
+      font-size: 0.938rem;
+      color: var(--color-destructive);
+      margin-bottom: var(--space-5);
+    }
+
+    .btn-retry {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      height: 40px;
+      padding: 0 var(--space-5);
+      border: none;
+      border-radius: var(--radius-md);
+      background: var(--color-primary);
+      color: var(--color-on-primary);
+      font-family: var(--font-body);
+      font-size: 0.938rem;
+      cursor: pointer;
+      transition: background 200ms ease;
+    }
+
+    .btn-retry:hover {
+      background: #64748B;
+    }
+
+    /* ========== Modal Overlay ========== */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: rgba(15, 23, 42, 0.5);
+      backdrop-filter: blur(2px);
+      align-items: center;
+      justify-content: center;
+      padding: var(--space-6);
+    }
+
+    .modal-overlay.visible {
+      display: flex;
+    }
+
+    .modal {
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-xl);
+      padding: var(--space-6);
+      box-shadow: var(--shadow-lg);
+      width: 100%;
+      max-width: 400px;
+      animation: modal-in 200ms ease-out;
+    }
+
+    @keyframes modal-in {
+      from { opacity: 0; transform: scale(0.95) translateY(8px); }
+      to { opacity: 1; transform: scale(1) translateY(0); }
+    }
+
+    .modal-title {
+      font-family: var(--font-title);
+      font-size: 1.375rem;
+      font-weight: 600;
+      margin-bottom: var(--space-5);
+      color: var(--color-foreground);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: var(--space-4);
+      right: var(--space-4);
+      width: 32px;
+      height: 32px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      color: var(--color-muted-foreground);
+      transition: background 200ms ease, color 200ms ease;
+    }
+
+    .modal-close:hover {
+      background: var(--color-muted);
+      color: var(--color-foreground);
+    }
+
+    .modal-close:focus-visible {
+      outline: 2px solid var(--color-ring);
+      outline-offset: 2px;
+    }
+
+    /* ========== Form ========== */
+    .form-group {
+      margin-bottom: var(--space-4);
+    }
+
+    .form-label {
+      display: block;
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 500;
+      color: var(--color-foreground);
+      margin-bottom: 6px;
+    }
+
+    .form-label .required {
+      color: var(--color-destructive);
+    }
+
+    .form-input,
+    .form-textarea {
+      width: 100%;
+      padding: 8px var(--space-3);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      font-family: var(--font-body);
+      font-size: 0.938rem;
+      color: var(--color-foreground);
+      background: var(--color-card);
+      transition: border-color 200ms ease, box-shadow 200ms ease;
+    }
+
+    .form-input:focus,
+    .form-textarea:focus {
+      outline: none;
+      border-color: var(--color-ring);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+
+    .form-input.error {
+      border-color: var(--color-destructive);
+    }
+
+    .form-input.error:focus {
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+    }
+
+    .form-error {
+      display: none;
+      font-size: 0.813rem;
+      color: var(--color-destructive);
+      margin-top: 4px;
+    }
+
+    .form-error.visible {
+      display: block;
+    }
+
+    .form-textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Tag Selector */
+    .tag-selector {
+      position: relative;
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-card);
+      padding: 4px;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 4px;
+      cursor: text;
+      min-height: 42px;
+      transition: border-color 200ms ease, box-shadow 200ms ease;
+    }
+
+    .tag-selector:focus-within {
+      border-color: var(--color-ring);
+      box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.2);
+    }
+
+    .tag-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 4px;
+      align-items: center;
+    }
+
+    .tag-chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      border-radius: var(--radius-sm);
+      background: var(--color-muted);
+      color: var(--color-foreground);
+      font-family: var(--font-tag);
+      font-size: 0.625rem;
+      font-weight: 600;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      white-space: nowrap;
+    }
+
+    .tag-chip-remove {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 14px;
+      height: 14px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      color: var(--color-muted-foreground);
+      border-radius: 50%;
+      padding: 0;
+      font-size: 12px;
+      line-height: 1;
+      transition: color 200ms ease, background 200ms ease;
+    }
+
+    .tag-chip-remove:hover {
+      color: var(--color-foreground);
+      background: rgba(255,255,255,0.1);
+    }
+
+    .tag-input {
+      flex: 1;
+      min-width: 120px;
+      border: none !important;
+      outline: none !important;
+      box-shadow: none !important;
+      background: transparent !important;
+      color: var(--color-foreground);
+      font-family: var(--font-body);
+      font-size: 0.938rem;
+      padding: 4px 4px;
+      height: auto;
+    }
+
+    .tag-input::placeholder {
+      color: var(--color-muted-foreground);
+    }
+
+    .tag-dropdown {
+      position: absolute;
+      top: 100%;
+      left: 0;
+      right: 0;
+      margin-top: 4px;
+      background: var(--color-card);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      box-shadow: var(--shadow-md);
+      max-height: 180px;
+      overflow-y: auto;
+      z-index: 50;
+    }
+
+    .tag-dropdown-item {
+      padding: 8px 12px;
+      font-size: 0.875rem;
+      color: var(--color-foreground);
+      cursor: pointer;
+      transition: background 150ms ease;
+      font-family: var(--font-body);
+    }
+
+    .tag-dropdown-item:hover,
+    .tag-dropdown-item.active {
+      background: var(--color-muted);
+    }
+
+    .tag-dropdown-empty {
+      padding: 8px 12px;
+      font-size: 0.813rem;
+      color: var(--color-muted-foreground);
+      font-style: italic;
+    }
+
+    .form-password-wrapper {
+      position: relative;
+    }
+
+    .form-password-wrapper .form-input {
+      padding-right: 44px;
+    }
+
+    .form-password-toggle {
+      position: absolute;
+      right: 4px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 36px;
+      height: 36px;
+      border: none;
+      background: none;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      color: var(--color-muted-foreground);
+      transition: color 200ms ease;
+    }
+
+    .form-password-toggle:hover {
+      color: var(--color-foreground);
+    }
+
+    .btn-submit {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      width: 100%;
+      height: 44px;
+      padding: 0 var(--space-5);
+      border: none;
+      border-radius: var(--radius-md);
+      background: var(--color-accent);
+      color: #FFFFFF;
+      font-family: var(--font-body);
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      margin-top: var(--space-2);
+      transition: background 200ms ease, opacity 200ms ease;
+    }
+
+    .btn-submit:hover {
+      background: #B45309;
+    }
+
+    .btn-submit:focus-visible {
+      outline: 2px solid var(--color-ring);
+      outline-offset: 2px;
+    }
+
+    .btn-submit:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+
+    .spinner {
+      display: inline-block;
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #FFFFFF;
+      border-radius: 50%;
+      animation: spin 600ms linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    /* ========== Toast ========== */
+    .toast-container {
+      position: fixed;
+      bottom: var(--space-6);
+      right: var(--space-6);
+      z-index: 200;
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-2);
+      pointer-events: none;
+    }
+
+    .toast {
+      padding: var(--space-3) var(--space-5);
+      border-radius: var(--radius-md);
+      background: var(--color-card);
+      box-shadow: var(--shadow-md);
+      font-family: var(--font-body);
+      font-size: 0.875rem;
+      font-weight: 500;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      pointer-events: auto;
+      animation: toast-in 300ms ease-out;
+      border-left: 4px solid;
+    }
+
+    .toast-success {
+      border-color: var(--color-success);
+      color: var(--color-success);
+    }
+
+    .toast-error {
+      border-color: var(--color-destructive);
+      color: var(--color-destructive);
+    }
+
+    .toast-removing {
+      animation: toast-out 200ms ease-in forwards;
+    }
+
+    @keyframes toast-in {
+      from { opacity: 0; transform: translateY(16px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    @keyframes toast-out {
+      from { opacity: 1; transform: translateY(0); }
+      to { opacity: 0; transform: translateY(16px); }
+    }
+
+    /* ========== Utility ========== */
+    .hidden {
+      display: none !important;
+    }
+
+    .btn-cancel {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      height: 40px;
+      padding: 0 var(--space-5);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      background: var(--color-card);
+      color: var(--color-foreground);
+      font-family: var(--font-body);
+      font-size: 0.938rem;
+      cursor: pointer;
+      transition: border-color 200ms ease;
+      margin-top: var(--space-2);
+      width: 100%;
+    }
+
+    .btn-cancel:hover {
+      border-color: var(--color-ring);
+    }
+
+    /* ========== Responsive ========== */
+    @media (max-width: 639px) {
+      .header-inner {
+        flex-wrap: wrap;
+        height: auto;
+        padding-top: var(--space-3);
+        padding-bottom: var(--space-3);
+        gap: var(--space-3);
+      }
+
+      .header-title {
+        font-size: 1.375rem;
+      }
+
+      .header-search {
+        max-width: 100%;
+        order: 3;
+        flex-basis: 100%;
+      }
+
+      .btn-add {
+        margin-left: auto;
+        font-size: 0.875rem;
+        padding: 0 var(--space-4);
+      }
+
+      .filter-bar {
+        padding: var(--space-3) var(--space-4);
+        gap: var(--space-2);
+      }
+
+      .filter-select {
+        font-size: 0.813rem;
+        max-width: calc(50% - 4px);
+      }
+
+      .main {
+        padding: 0 var(--space-4) var(--space-6);
+      }
+
+      .modal {
+        max-width: 100%;
+        margin: 0;
+        border-radius: var(--radius-lg);
+      }
+    }
+
+    /* Accessibility: reduced motion */
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- ========== Header ========== -->
+  <header class="header">
+    <div class="header-inner">
+      <h1 class="header-title">📚 书单推荐</h1>
+      <div class="header-search">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+        <input type="text" id="searchInput" placeholder="搜索书名…" autocomplete="off">
+      </div>
+      <button class="btn-add" id="btnAdd" aria-label="添加推荐">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M12 5v14M5 12h14"/>
+        </svg>
+        添加推荐
+      </button>
+    </div>
+  </header>
+
+  <!-- ========== Filter Bar ========== -->
+  <div class="filter-bar">
+    <select class="filter-select" id="filterTag" aria-label="筛选类型">
+      <option value="全部">全部类型</option>
+    </select>
+    <select class="filter-select" id="filterAuthor" aria-label="筛选作者">
+      <option value="全部">全部作者</option>
+    </select>
+    <select class="filter-select" id="filterPlatform" aria-label="筛选平台">
+      <option value="全部">全部平台</option>
+    </select>
+  </div>
+
+  <!-- ========== Main Content ========== -->
+  <main class="main">
+    <!-- Skeleton loading (initial state) -->
+    <div class="card-grid" id="skeletonGrid">
+      <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-meta"></div><div class="skeleton skeleton-tags"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text-short"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-meta"></div><div class="skeleton skeleton-tags"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text-short"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-meta"></div><div class="skeleton skeleton-tags"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text-short"></div></div>
+      <div class="skeleton-card"><div class="skeleton skeleton-title"></div><div class="skeleton skeleton-meta"></div><div class="skeleton skeleton-tags"></div><div class="skeleton skeleton-text"></div><div class="skeleton skeleton-text-short"></div></div>
+    </div>
+
+    <!-- Card grid (populated by JS) -->
+    <div class="card-grid hidden" id="cardGrid"></div>
+
+    <!-- Empty: no books in database -->
+    <div class="empty-state hidden" id="emptyState">
+      <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+        <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
+        <path d="M12 6v7M9 9.5h6"/>
+      </svg>
+      <h2 class="empty-title">还没有推荐</h2>
+      <p class="empty-desc">你的书单还是空的，快来添加第一本书吧！</p>
+      <button class="btn-add" id="btnAddEmpty">添加推荐</button>
+    </div>
+
+    <!-- Empty: search no results -->
+    <div class="empty-state hidden" id="noResultsState">
+      <svg class="empty-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="11" cy="11" r="8"/>
+        <path d="m21 21-4.35-4.35"/>
+        <path d="M8 11h6"/>
+      </svg>
+      <h2 class="empty-title">没有找到匹配的书</h2>
+      <p class="empty-desc">试试调整筛选条件或搜索关键词</p>
+      <button class="btn-empty" id="btnClearFilters">清除所有筛选</button>
+    </div>
+
+    <!-- Error state -->
+    <div class="error-state hidden" id="errorState">
+      <svg class="error-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+        <circle cx="12" cy="12" r="10"/>
+        <path d="M12 8v4M12 16h.01"/>
+      </svg>
+      <p class="error-message" id="errorMessage">加载失败，请检查网络连接</p>
+      <button class="btn-retry" id="btnRetry">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M21 2v6h-6M3 12a9 9 0 0 1 15.36-6.36L21 8M3 22v-6h6M21 12a9 9 0 0 1-15.36 6.36L3 16"/>
+        </svg>
+        重试
+      </button>
+    </div>
+  </main>
+
+  <!-- ========== Password Modal ========== -->
+  <div class="modal-overlay" id="passwordModal">
+    <div class="modal" style="position:relative;">
+      <button class="modal-close" id="btnPasswordClose" aria-label="关闭">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+      <h2 class="modal-title">验证密码</h2>
+      <p style="font-size:0.875rem;color:var(--color-muted-foreground);margin-bottom:var(--space-4);">添加推荐需要输入密码</p>
+      <form id="passwordForm" autocomplete="off">
+        <div class="form-group">
+          <label class="form-label" for="passwordInput">密码</label>
+          <div class="form-password-wrapper">
+            <input type="password" class="form-input" id="passwordInput" placeholder="请输入密码" autocomplete="off" required>
+            <button type="button" class="form-password-toggle" id="btnTogglePassword" aria-label="显示密码" tabindex="-1">
+              <svg id="eyeIcon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+                <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/>
+                <circle cx="12" cy="12" r="3"/>
+              </svg>
+            </button>
+          </div>
+          <span class="form-error" id="passwordError">密码错误，请重试</span>
+        </div>
+        <button type="submit" class="btn-submit" id="btnPasswordSubmit">验证</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========== Add Form Modal ========== -->
+  <div class="modal-overlay" id="addFormModal">
+    <div class="modal" style="position:relative;max-width:480px;max-height:90vh;overflow-y:auto;">
+      <button class="modal-close" id="btnFormClose" aria-label="关闭">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+      <h2 class="modal-title">添加推荐</h2>
+      <form id="addForm" autocomplete="off">
+        <div class="form-group">
+          <label class="form-label" for="addTitle"><span class="required">*</span> 书名</label>
+          <input type="text" class="form-input" id="addTitle" placeholder="输入书名" required>
+          <span class="form-error" id="addTitleError">书名不能为空</span>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="addAuthor">作者</label>
+          <input type="text" class="form-input" id="addAuthor" placeholder="输入作者" list="authorSuggestions" autocomplete="off">
+          <datalist id="authorSuggestions"></datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="addPlatform">平台</label>
+          <input type="text" class="form-input" id="addPlatform" placeholder="如：起点中文网" list="platformSuggestions" autocomplete="off">
+          <datalist id="platformSuggestions"></datalist>
+        </div>
+        <div class="form-group">
+          <label class="form-label">类型标签</label>
+          <div class="tag-selector" id="tagSelector">
+            <div class="tag-chips" id="tagChips"></div>
+            <input type="text" class="form-input tag-input" id="addTagsInput" placeholder="搜索或输入新标签…" autocomplete="off">
+            <div class="tag-dropdown hidden" id="tagDropdown"></div>
+          </div>
+        </div>
+        <div class="form-group">
+          <label class="form-label" for="addReview">评价</label>
+          <textarea class="form-textarea" id="addReview" placeholder="写一句推荐语…" rows="3"></textarea>
+        </div>
+        <button type="submit" class="btn-submit" id="btnAddSubmit">
+          <span id="btnAddSubmitText">添加推荐</span>
+          <span class="spinner hidden" id="btnAddSpinner"></span>
+        </button>
+        <button type="button" class="btn-cancel" id="btnFormCancel">取消</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- ========== Toast Container ========== -->
+  <div class="toast-container" id="toastContainer" aria-live="polite"></div>
+
+  <!-- ========== JavaScript ========== -->
+  <script>
+  (function () {
+    const API_BASE = '/api/notion';
+
+    // ========== State ==========
+    const state = {
+      books: [],
+      options: { authors: [], platforms: [], tags: [] },
+      filters: { search: '', tag: '', author: '', platform: '' },
+      loading: false,
+      error: null,
+      addPassword: null,
+      currentAbortController: null,
+    };
+
+    // ========== DOM Refs ==========
+    const $ = (sel) => document.querySelector(sel);
+    const $$ = (sel) => document.querySelectorAll(sel);
+
+    const dom = {
+      skeletonGrid: $('#skeletonGrid'),
+      cardGrid: $('#cardGrid'),
+      emptyState: $('#emptyState'),
+      noResultsState: $('#noResultsState'),
+      errorState: $('#errorState'),
+      errorMessage: $('#errorMessage'),
+      searchInput: $('#searchInput'),
+      filterTag: $('#filterTag'),
+      filterAuthor: $('#filterAuthor'),
+      filterPlatform: $('#filterPlatform'),
+      passwordModal: $('#passwordModal'),
+      passwordForm: $('#passwordForm'),
+      passwordInput: $('#passwordInput'),
+      passwordError: $('#passwordError'),
+      addFormModal: $('#addFormModal'),
+      addForm: $('#addForm'),
+      addTitle: $('#addTitle'),
+      addTitleError: $('#addTitleError'),
+      tagSelector: $('#tagSelector'),
+      tagChips: $('#tagChips'),
+      tagInput: $('#addTagsInput'),
+      tagDropdown: $('#tagDropdown'),
+      selectedTags: [],
+      toastContainer: $('#toastContainer'),
+      authorSuggestions: $('#authorSuggestions'),
+      platformSuggestions: $('#platformSuggestions'),
+    };
+
+    // ========== Toast ==========
+    function showToast(message, type) {
+      const toast = document.createElement('div');
+      toast.className = `toast toast-${type}`;
+      const icon = type === 'success'
+        ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M20 6 9 17l-5-5"/></svg>'
+        : '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><path d="M12 8v4M12 16h.01"/></svg>';
+      toast.innerHTML = `${icon}<span>${message}</span>`;
+      dom.toastContainer.appendChild(toast);
+
+      setTimeout(() => {
+        toast.classList.add('toast-removing');
+        toast.addEventListener('animationend', () => toast.remove());
+      }, 3000);
+    }
+
+    // ========== State Display ==========
+    function showSkeleton() {
+      dom.skeletonGrid.classList.remove('hidden');
+      dom.cardGrid.classList.add('hidden');
+      dom.emptyState.classList.remove('visible', 'hidden');
+      dom.emptyState.classList.add('hidden');
+      dom.noResultsState.classList.remove('visible', 'hidden');
+      dom.noResultsState.classList.add('hidden');
+      dom.errorState.classList.remove('visible', 'hidden');
+      dom.errorState.classList.add('hidden');
+    }
+
+    function showCards(books) {
+      dom.skeletonGrid.classList.add('hidden');
+      dom.cardGrid.classList.remove('hidden');
+      dom.emptyState.classList.remove('visible', 'hidden');
+      dom.emptyState.classList.add('hidden');
+      dom.noResultsState.classList.remove('visible', 'hidden');
+      dom.noResultsState.classList.add('hidden');
+      dom.errorState.classList.remove('visible', 'hidden');
+      dom.errorState.classList.add('hidden');
+      renderCards(books);
+    }
+
+    function showEmpty() {
+      dom.skeletonGrid.classList.add('hidden');
+      dom.cardGrid.classList.add('hidden');
+      dom.emptyState.classList.add('visible');
+      dom.noResultsState.classList.remove('visible', 'hidden');
+      dom.noResultsState.classList.add('hidden');
+      dom.errorState.classList.remove('visible', 'hidden');
+      dom.errorState.classList.add('hidden');
+    }
+
+    function showNoResults() {
+      dom.skeletonGrid.classList.add('hidden');
+      dom.cardGrid.classList.add('hidden');
+      dom.emptyState.classList.remove('visible', 'hidden');
+      dom.emptyState.classList.add('hidden');
+      dom.noResultsState.classList.add('visible');
+      dom.errorState.classList.remove('visible', 'hidden');
+      dom.errorState.classList.add('hidden');
+    }
+
+    function showError(message) {
+      dom.skeletonGrid.classList.add('hidden');
+      dom.cardGrid.classList.add('hidden');
+      dom.emptyState.classList.remove('visible', 'hidden');
+      dom.emptyState.classList.add('hidden');
+      dom.noResultsState.classList.remove('visible', 'hidden');
+      dom.noResultsState.classList.add('hidden');
+      dom.errorState.classList.add('visible');
+      dom.errorMessage.textContent = message || '加载失败，请检查网络连接';
+    }
+
+    // ========== Render Cards ==========
+    function renderCards(books) {
+      // 过滤空卡片：必须有书名，或者至少有作者/标签/评价
+      const filtered = books.filter((book) => {
+        const hasContent = book.title && book.title !== '未命名';
+        const hasMeta = book.author || book.platform || book.tags.length > 0 || book.review;
+        return hasContent || hasMeta;
+      });
+
+      dom.cardGrid.innerHTML = filtered.map((book) => {
+        const tagHTML = book.tags.length > 0
+          ? book.tags.map((t) => `<span class="book-tag">${escapeHTML(t)}</span>`).join('')
+          : '';
+
+        const metaParts = [book.author, book.platform].filter(Boolean);
+        const metaHTML = metaParts.length > 0
+          ? metaParts.join('<span class="book-meta-sep" aria-hidden="true"></span>')
+          : '';
+
+        const reviewHTML = book.review
+          ? `<p class="book-review">${escapeHTML(book.review)}</p>`
+          : '';
+
+        return `
+          <article class="book-card" tabindex="0" aria-label="${escapeHTML(book.title)}">
+            <div class="book-card-header">
+              <h3 class="book-title">${escapeHTML(book.title)}</h3>
+            </div>
+            ${metaHTML ? `<div class="book-meta">${metaHTML}</div>` : ''}
+            ${tagHTML ? `<div class="book-tags">${tagHTML}</div>` : ''}
+            ${reviewHTML}
+          </article>
+        `;
+      }).join('');
+
+      // 点击卡片展开/收起评价
+      dom.cardGrid.querySelectorAll('.book-card').forEach((card) => {
+        card.addEventListener('click', () => {
+          const review = card.querySelector('.book-review');
+          if (review) {
+            review.classList.toggle('expanded');
+          }
+        });
+        card.addEventListener('keydown', (e) => {
+          if (e.key === 'Enter') {
+            const review = card.querySelector('.book-review');
+            if (review) {
+              review.classList.toggle('expanded');
+            }
+          }
+        });
+      });
+    }
+
+    function escapeHTML(str) {
+      const div = document.createElement('div');
+      div.textContent = str;
+      return div.innerHTML;
+    }
+
+    // ========== API Calls ==========
+    async function fetchBooks(filters = {}) {
+      // Cancel previous request
+      if (state.currentAbortController) {
+        state.currentAbortController.abort();
+      }
+      state.currentAbortController = new AbortController();
+      const signal = state.currentAbortController.signal;
+
+      const params = new URLSearchParams({ action: 'query' });
+      if (filters.search) params.set('search', filters.search);
+      if (filters.tag) params.set('tag', filters.tag);
+      if (filters.author) params.set('author', filters.author);
+      if (filters.platform) params.set('platform', filters.platform);
+
+      const res = await fetch(`${API_BASE}?${params}`, { signal });
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || '请求失败');
+      }
+      return res.json();
+    }
+
+    async function fetchOptions() {
+      const res = await fetch(`${API_BASE}?action=options`);
+      if (!res.ok) {
+        const data = await res.json().catch(() => ({}));
+        throw new Error(data.error || '请求失败');
+      }
+      return res.json();
+    }
+
+    async function addBook(bookData, password) {
+      const res = await fetch(`${API_BASE}?action=add`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Add-Password': password,
+        },
+        body: JSON.stringify(bookData),
+      });
+      const data = await res.json().catch(() => ({}));
+      if (!res.ok) {
+        throw new Error(data.error || '添加失败');
+      }
+      return data;
+    }
+
+    // ========== Load Data ==========
+    async function loadBooks() {
+      state.loading = true;
+      state.error = null;
+      showSkeleton();
+
+      try {
+        const data = await fetchBooks(state.filters);
+        state.books = data.books || [];
+
+        // 先过滤掉空卡片
+        const validBooks = state.books.filter((book) => {
+          const hasContent = book.title && book.title !== '未命名';
+          const hasMeta = book.author || book.platform || book.tags.length > 0 || book.review;
+          return hasContent || hasMeta;
+        });
+
+        if (validBooks.length === 0) {
+          const hasFilters = state.filters.search || state.filters.tag || state.filters.author || state.filters.platform;
+          if (hasFilters) {
+            showNoResults();
+          } else {
+            showEmpty();
+          }
+        } else {
+          showCards(state.books);
+        }
+      } catch (err) {
+        if (err.name === 'AbortError') return;
+        state.error = err.message;
+        showError(err.message);
+      } finally {
+        state.loading = false;
+      }
+    }
+
+    async function loadOptions() {
+      try {
+        const data = await fetchOptions();
+        state.options = data;
+        populateFilterOptions(data);
+        populateDatalists(data);
+      } catch (err) {
+        // Options load failure is non-critical; filters just won't populate
+        console.error('Failed to load filter options:', err);
+      }
+    }
+
+    function populateFilterOptions(data) {
+      // Populate tag filter
+      dom.filterTag.innerHTML = '<option value="全部">全部类型</option>';
+      data.tags.forEach((tag) => {
+        const opt = document.createElement('option');
+        opt.value = tag;
+        opt.textContent = tag;
+        dom.filterTag.appendChild(opt);
+      });
+
+      // Populate author filter
+      dom.filterAuthor.innerHTML = '<option value="全部">全部作者</option>';
+      data.authors.forEach((author) => {
+        const opt = document.createElement('option');
+        opt.value = author;
+        opt.textContent = author;
+        dom.filterAuthor.appendChild(opt);
+      });
+
+      // Populate platform filter
+      dom.filterPlatform.innerHTML = '<option value="全部">全部平台</option>';
+      data.platforms.forEach((platform) => {
+        const opt = document.createElement('option');
+        opt.value = platform;
+        opt.textContent = platform;
+        dom.filterPlatform.appendChild(opt);
+      });
+    }
+
+    function populateDatalists(data) {
+      dom.authorSuggestions.innerHTML = data.authors.map((a) => `<option value="${escapeHTML(a)}">`).join('');
+      dom.platformSuggestions.innerHTML = data.platforms.map((p) => `<option value="${escapeHTML(p)}">`).join('');
+    }
+
+    // ========== Search (Debounced) ==========
+    let searchTimer;
+    dom.searchInput.addEventListener('input', () => {
+      clearTimeout(searchTimer);
+      searchTimer = setTimeout(() => {
+        state.filters.search = dom.searchInput.value.trim();
+        loadBooks();
+      }, 300);
+    });
+
+    // Clear search with Escape
+    dom.searchInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        dom.searchInput.value = '';
+        state.filters.search = '';
+        loadBooks();
+        dom.searchInput.blur();
+      }
+    });
+
+    // ========== Filter Change ==========
+    dom.filterTag.addEventListener('change', () => {
+      state.filters.tag = dom.filterTag.value === '全部' ? '' : dom.filterTag.value;
+      loadBooks();
+    });
+
+    dom.filterAuthor.addEventListener('change', () => {
+      state.filters.author = dom.filterAuthor.value === '全部' ? '' : dom.filterAuthor.value;
+      loadBooks();
+    });
+
+    dom.filterPlatform.addEventListener('change', () => {
+      state.filters.platform = dom.filterPlatform.value === '全部' ? '' : dom.filterPlatform.value;
+      loadBooks();
+    });
+
+    // Clear all filters
+    $('#btnClearFilters').addEventListener('click', () => {
+      dom.searchInput.value = '';
+      dom.filterTag.value = '全部';
+      dom.filterAuthor.value = '全部';
+      dom.filterPlatform.value = '全部';
+      state.filters = { search: '', tag: '', author: '', platform: '' };
+      loadBooks();
+    });
+
+    // ========== Password Modal ==========
+    function openPasswordModal() {
+      dom.passwordModal.classList.add('visible');
+      dom.passwordInput.value = '';
+      dom.passwordError.classList.remove('visible');
+      dom.passwordInput.classList.remove('error');
+      dom.passwordInput.focus();
+    }
+
+    function closePasswordModal() {
+      dom.passwordModal.classList.remove('visible');
+    }
+
+    $('#btnAdd').addEventListener('click', openPasswordModal);
+    $('#btnAddEmpty').addEventListener('click', openPasswordModal);
+    $('#btnPasswordClose').addEventListener('click', closePasswordModal);
+
+    dom.passwordModal.addEventListener('click', (e) => {
+      if (e.target === dom.passwordModal) closePasswordModal();
+    });
+
+    // Password toggle visibility
+    $('#btnTogglePassword').addEventListener('click', () => {
+      const isPassword = dom.passwordInput.type === 'password';
+      dom.passwordInput.type = isPassword ? 'text' : 'password';
+      if (isPassword) {
+        $('#eyeIcon').innerHTML = '<path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3.5 3.5 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/>';
+      } else {
+        $('#eyeIcon').innerHTML = '<path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/>';
+      }
+    });
+
+    // Password form submit
+    dom.passwordForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const password = dom.passwordInput.value;
+
+      if (!password) {
+        dom.passwordInput.classList.add('error');
+        dom.passwordError.textContent = '请输入密码';
+        dom.passwordError.classList.add('visible');
+        return;
+      }
+
+      // Disable submit button, show spinner
+      const submitBtn = $('#btnPasswordSubmit');
+      submitBtn.disabled = true;
+      submitBtn.innerHTML = '<span class="spinner"></span> 验证中…';
+      dom.passwordError.classList.remove('visible');
+      dom.passwordInput.classList.remove('error');
+
+      try {
+        // 调用 verify 端点验证密码
+        const verifyRes = await fetch(`${API_BASE}?action=verify`, {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'X-Add-Password': password,
+          },
+        });
+
+        if (verifyRes.status === 401) {
+          throw new Error('密码错误');
+        }
+
+        // 存储密码供后续添加使用
+        state.addPassword = password;
+        closePasswordModal();
+        openAddFormModal();
+      } catch (err) {
+        dom.passwordInput.classList.add('error');
+        dom.passwordError.textContent = err.message === '密码错误' ? '密码错误，请重试' : '验证失败，请重试';
+        dom.passwordError.classList.add('visible');
+      } finally {
+        submitBtn.disabled = false;
+        submitBtn.innerHTML = '验证';
+      }
+    });
+
+    // ========== Tag Selector ==========
+    if (dom.tagInput) {
+      dom.tagInput.addEventListener('focus', () => {
+        try { showTagDropdown(); } catch(e) {}
+      });
+      dom.tagInput.addEventListener('input', () => {
+        try {
+          showTagDropdown();
+          const first = dom.tagDropdown.querySelector('.tag-dropdown-item');
+          if (first) first.classList.add('active');
+        } catch(e) {}
+      });
+
+      dom.tagInput.addEventListener('keydown', (e) => {
+        try {
+          const items = dom.tagDropdown.querySelectorAll('.tag-dropdown-item');
+          const active = dom.tagDropdown.querySelector('.tag-dropdown-item.active');
+
+          if (e.key === 'ArrowDown') {
+            e.preventDefault();
+            if (!active) {
+              items[0]?.classList.add('active');
+            } else {
+              active.classList.remove('active');
+              const next = active.nextElementSibling;
+              if (next) next.classList.add('active');
+              else items[0]?.classList.add('active');
+            }
+          } else if (e.key === 'ArrowUp') {
+            e.preventDefault();
+            if (!active) {
+              items[items.length - 1]?.classList.add('active');
+            } else {
+              active.classList.remove('active');
+              const prev = active.previousElementSibling;
+              if (prev) prev.classList.add('active');
+              else items[items.length - 1]?.classList.add('active');
+            }
+          } else if (e.key === 'Enter') {
+            e.preventDefault();
+            if (active) {
+              active.click();
+            } else {
+              const val = dom.tagInput.value.trim();
+              if (val) {
+                addTag(val);
+                dom.tagInput.value = '';
+                showTagDropdown();
+              }
+            }
+          } else if (e.key === 'Escape') {
+            dom.tagDropdown.classList.add('hidden');
+          }
+        } catch(e) {}
+      });
+
+      dom.tagInput.addEventListener('blur', () => {
+        try { setTimeout(() => dom.tagDropdown.classList.add('hidden'), 150); } catch(e) {}
+      });
+    }
+
+    // 点击 tag-selector 空白区域时聚焦 input
+    if (dom.tagSelector) {
+      dom.tagSelector.addEventListener('click', (e) => {
+        if (e.target === dom.tagSelector) {
+          dom.tagInput.focus();
+        }
+      });
+    }
+
+    function showTagDropdown() {
+      const tags = state.options?.tags || [];
+      const query = dom.tagInput.value.trim().toLowerCase();
+      const available = tags.filter((t) => {
+        return !dom.selectedTags.includes(t) && (!query || t.toLowerCase().includes(query));
+      });
+
+      if (available.length === 0) {
+        dom.tagDropdown.innerHTML = query
+          ? `<div class="tag-dropdown-item" data-tag="${escapeHTML(query)}">✨ 新建 "${escapeHTML(query)}"</div>`
+          : '<div class="tag-dropdown-empty">没有更多标签了</div>';
+      } else {
+        dom.tagDropdown.innerHTML = available.map((t) => {
+          const highlight = query ? t.replace(new RegExp(`(${escapeRegex(query)})`, 'gi'), '<strong>$1</strong>') : t;
+          return `<div class="tag-dropdown-item" data-tag="${escapeHTML(t)}">${highlight}</div>`;
+        }).join('');
+      }
+
+      dom.tagDropdown.classList.remove('hidden');
+
+      // 点击下拉项
+      dom.tagDropdown.querySelectorAll('.tag-dropdown-item').forEach((item) => {
+        item.addEventListener('mousedown', (e) => {
+          e.preventDefault();
+          const tag = item.dataset.tag;
+          if (tag) {
+            addTag(tag);
+            dom.tagInput.value = '';
+            dom.tagInput.focus();
+            showTagDropdown();
+          }
+        });
+        // 鼠标悬停时高亮
+        item.addEventListener('mouseenter', () => {
+          dom.tagDropdown.querySelectorAll('.tag-dropdown-item').forEach((el) => el.classList.remove('active'));
+          item.classList.add('active');
+        });
+      });
+    }
+
+    function addTag(tag) {
+      tag = tag.trim();
+      if (tag && !dom.selectedTags.includes(tag)) {
+        dom.selectedTags.push(tag);
+        renderTagChips();
+      }
+    }
+
+    function removeTag(tag) {
+      dom.selectedTags = dom.selectedTags.filter((t) => t !== tag);
+      renderTagChips();
+      dom.tagInput.focus();
+      showTagDropdown();
+    }
+
+    function renderTagChips() {
+      dom.tagChips.innerHTML = dom.selectedTags.map((tag) =>
+        `<span class="tag-chip">${escapeHTML(tag)}<button type="button" class="tag-chip-remove" data-tag="${escapeHTML(tag)}" aria-label="移除 ${escapeHTML(tag)}">×</button></span>`
+      ).join('');
+
+      dom.tagChips.querySelectorAll('.tag-chip-remove').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          removeTag(btn.dataset.tag);
+        });
+      });
+    }
+
+    function escapeRegex(str) {
+      return str.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+    }
+
+    // ========== Add Form Modal ==========
+    function openAddFormModal() {
+      dom.addFormModal.classList.add('visible');
+      dom.addTitle.focus();
+      // Reset form
+      dom.addForm.reset();
+      dom.addTitleError.classList.remove('visible');
+      dom.addTitle.classList.remove('error');
+      // Reset tags
+      dom.selectedTags = [];
+      renderTagChips();
+      dom.tagInput.value = '';
+      dom.tagDropdown.classList.add('hidden');
+      resetSubmitButton();
+    }
+
+    function closeAddFormModal() {
+      const hasContent = dom.addTitle.value.trim() || $('#addAuthor').value.trim() || $('#addReview').value.trim();
+      if (hasContent) {
+        if (!confirm('表单内容未保存，确定关闭吗？')) return;
+      }
+      dom.addFormModal.classList.remove('visible');
+    }
+
+    $('#btnFormClose').addEventListener('click', closeAddFormModal);
+    $('#btnFormCancel').addEventListener('click', closeAddFormModal);
+
+    // ESC to close modals
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        if (dom.addFormModal.classList.contains('visible')) {
+          closeAddFormModal();
+        } else if (dom.passwordModal.classList.contains('visible')) {
+          closePasswordModal();
+        }
+      }
+    });
+
+    // Form submit
+    dom.addForm.addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const title = dom.addTitle.value.trim();
+      if (!title) {
+        dom.addTitle.classList.add('error');
+        dom.addTitleError.textContent = '书名不能为空';
+        dom.addTitleError.classList.add('visible');
+        dom.addTitle.focus();
+        return;
+      }
+
+      dom.addTitle.classList.remove('error');
+      dom.addTitleError.classList.remove('visible');
+
+      const tags = [...dom.selectedTags];
+
+      const bookData = {
+        title: title,
+        author: $('#addAuthor').value.trim(),
+        platform: $('#addPlatform').value.trim(),
+        tags: tags,
+        review: $('#addReview').value.trim(),
+      };
+
+      // Disable submit
+      setSubmitLoading(true);
+
+      try {
+        await addBook(bookData, state.addPassword);
+        showToast('添加成功！', 'success');
+        closeAddFormModal();
+        // Reload the list and options
+        await loadOptions();
+        await loadBooks();
+      } catch (err) {
+        showToast(err.message || '添加失败', 'error');
+      } finally {
+        setSubmitLoading(false);
+      }
+    });
+
+    function setSubmitLoading(loading) {
+      const btn = $('#btnAddSubmit');
+      const text = $('#btnAddSubmitText');
+      const spinner = $('#btnAddSpinner');
+      btn.disabled = loading;
+      if (loading) {
+        text.classList.add('hidden');
+        spinner.classList.remove('hidden');
+      } else {
+        text.classList.remove('hidden');
+        spinner.classList.add('hidden');
+      }
+    }
+
+    function resetSubmitButton() {
+      setSubmitLoading(false);
+    }
+
+    // ========== Retry ==========
+    $('#btnRetry').addEventListener('click', () => {
+      loadBooks();
+    });
+
+    // ========== Init ==========
+    async function init() {
+      showSkeleton();
+      await Promise.all([loadBooks(), loadOptions()]);
+    }
+
+    init();
+  })();
+  </script>
+</body>
+</html>
