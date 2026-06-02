@@ -1,5 +1,7 @@
 # 📚 书单推荐
 
+> 🌐 **在线访问：[web-bookrec.vercel.app](https://web-bookrec.vercel.app)**
+
 一个连接 Notion 数据库的网文推荐网页，支持搜索、筛选和添加推荐。
 
 ## 功能
