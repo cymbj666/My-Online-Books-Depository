@@ -972,6 +972,52 @@
       }
     }
 
+    .btn-recommend {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--color-border);
+      background: transparent;
+      color: var(--color-muted-foreground);
+      border-radius: var(--radius-sm);
+      cursor: pointer;
+      transition: all 200ms ease;
+    }
+    .btn-recommend:hover {
+      border-color: var(--color-ring);
+      color: var(--color-ring);
+      background: rgba(245, 158, 11, 0.1);
+    }
+    .recommend-item {
+      padding: var(--space-3);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--space-3);
+      background: var(--color-card);
+    }
+    .recommend-title {
+      font-size: 0.938rem;
+      font-weight: 600;
+      color: var(--color-foreground);
+      margin-bottom: 4px;
+    }
+    .recommend-link {
+      font-size: 0.813rem;
+      color: var(--color-ring);
+      text-decoration: none;
+      word-break: break-all;
+    }
+    .recommend-link:hover {
+      text-decoration: underline;
+    }
+    .recommend-label {
+      font-size: 0.813rem;
+      color: var(--color-muted-foreground);
+      margin-bottom: 8px;
+    }
+
     /* Accessibility: reduced motion */
     @media (prefers-reduced-motion: reduce) {
       *, *::before, *::after {
@@ -1145,6 +1191,34 @@
     </div>
   </div>
 
+  <!-- ========== Recommend Modal ========== -->
+  <div class="modal-overlay" id="recommendModal">
+    <div class="modal" style="position:relative;">
+      <button class="modal-close" id="btnRecommendClose" aria-label="关闭">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+          <path d="M18 6 6 18M6 6l12 12"/>
+        </svg>
+      </button>
+      <h2 class="modal-title">类似推荐</h2>
+      
+      <div id="recommendContent">
+        <div class="recommend-label">仓库里最符合的类似书：</div>
+        <div id="repoRecommendResult">
+          <div class="recommend-item">
+            <div class="spinner" style="border-color:var(--color-border);border-top-color:var(--color-ring);width:14px;height:14px;"></div> 加载中...
+          </div>
+        </div>
+
+        <div class="recommend-label" style="margin-top:var(--space-4);">网页查找出来推荐的书：</div>
+        <div id="webRecommendResult">
+          <div class="recommend-item">
+            <div class="spinner" style="border-color:var(--color-border);border-top-color:var(--color-ring);width:14px;height:14px;"></div> 加载中...
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ========== Toast Container ========== -->
   <div class="toast-container" id="toastContainer" aria-live="polite"></div>
 
@@ -1295,6 +1369,9 @@
           <article class="book-card" tabindex="0" aria-label="${escapeHTML(book.title)}">
             <div class="book-card-header">
               <h3 class="book-title">${escapeHTML(book.title)}</h3>
+              <button class="btn-recommend" data-id="${book.id}" aria-label="类似推荐" title="类似推荐">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="m21 16-4 4-4-4"/><path d="M17 20V4"/><path d="m3 8 4-4 4 4"/><path d="M7 4v16"/></svg>
+              </button>
             </div>
             ${metaHTML ? `<div class="book-meta">${metaHTML}</div>` : ''}
             ${tagHTML ? `<div class="book-tags">${tagHTML}</div>` : ''}
@@ -1305,7 +1382,8 @@
 
       // 点击卡片展开/收起评价
       dom.cardGrid.querySelectorAll('.book-card').forEach((card) => {
-        card.addEventListener('click', () => {
+        card.addEventListener('click', (e) => {
+          if (e.target.closest('.btn-recommend')) return;
           const review = card.querySelector('.book-review');
           if (review) {
             review.classList.toggle('expanded');
@@ -1313,11 +1391,22 @@
         });
         card.addEventListener('keydown', (e) => {
           if (e.key === 'Enter') {
+            if (e.target.closest('.btn-recommend')) return;
             const review = card.querySelector('.book-review');
             if (review) {
               review.classList.toggle('expanded');
             }
           }
+        });
+      });
+
+      // 类似推荐按钮事件
+      dom.cardGrid.querySelectorAll('.btn-recommend').forEach((btn) => {
+        btn.addEventListener('click', (e) => {
+          e.stopPropagation();
+          const bookId = btn.getAttribute('data-id');
+          const book = state.books.find(b => b.id === bookId);
+          if (book) openRecommendModal(book);
         });
       });
     }
@@ -1457,6 +1546,77 @@
       dom.authorSuggestions.innerHTML = data.authors.map((a) => `<option value="${escapeHTML(a)}">`).join('');
       dom.platformSuggestions.innerHTML = data.platforms.map((p) => `<option value="${escapeHTML(p)}">`).join('');
     }
+
+    // ========== Recommend Modal ==========
+    async function openRecommendModal(book) {
+      const modal = $('#recommendModal');
+      modal.classList.add('visible');
+      
+      const repoContainer = $('#repoRecommendResult');
+      const webContainer = $('#webRecommendResult');
+      
+      repoContainer.innerHTML = '<div class="recommend-item"><div class="spinner" style="border-color:var(--color-border);border-top-color:var(--color-ring);width:14px;height:14px;"></div> 查找中...</div>';
+      webContainer.innerHTML = '<div class="recommend-item"><div class="spinner" style="border-color:var(--color-border);border-top-color:var(--color-ring);width:14px;height:14px;"></div> 查找中...</div>';
+
+      // 1. 查找本地仓库最相似的
+      let bestMatch = null;
+      let maxOverlap = 0;
+      
+      state.books.forEach(b => {
+        if (b.id === book.id) return;
+        if (!b.tags || b.tags.length === 0) return;
+        const overlap = b.tags.filter(t => book.tags.includes(t)).length;
+        if (overlap > maxOverlap) {
+          maxOverlap = overlap;
+          bestMatch = b;
+        }
+      });
+
+      if (bestMatch && maxOverlap > 0) {
+        repoContainer.innerHTML = `
+          <div class="recommend-item">
+            <div class="recommend-title">${escapeHTML(bestMatch.title)}</div>
+            <div class="recommend-label" style="margin-bottom:0;">共同标签：${maxOverlap}个 (${escapeHTML(bestMatch.tags.filter(t=>book.tags.includes(t)).join(', '))})</div>
+          </div>
+        `;
+      } else {
+        repoContainer.innerHTML = `<div class="recommend-item" style="color:var(--color-muted-foreground);">暂无相似书籍</div>`;
+      }
+
+      // 2. 网页查找推荐
+      const mainTag = book.tags && book.tags.length > 0 ? book.tags[0] : book.title;
+      try {
+        const res = await fetch(`${API_BASE}?action=recommend&tag=${encodeURIComponent(mainTag)}`);
+        if (!res.ok) throw new Error('请求失败');
+        const data = await res.json();
+        
+        if (data.results && data.results.length > 0) {
+          webContainer.innerHTML = data.results.map(r => `
+            <div class="recommend-item">
+              <div class="recommend-title">${escapeHTML(r.title)}</div>
+              <a href="${escapeHTML(r.url)}" target="_blank" class="recommend-link">${escapeHTML(r.url)}</a>
+            </div>
+          `).join('');
+        } else {
+          webContainer.innerHTML = `<div class="recommend-item" style="color:var(--color-muted-foreground);">未找到推荐</div>`;
+        }
+      } catch (err) {
+        const searchUrl = `https://lite.duckduckgo.com/lite/?q=${encodeURIComponent(mainTag + ' 经典小说 必看 神作 豆瓣高分 site:qidian.com OR site:fanqienovel.com')}`;
+        webContainer.innerHTML = `
+          <div class="recommend-item">
+            <div class="recommend-label">抓取失败，你可以点击这里直接搜索：</div>
+            <a href="${searchUrl}" target="_blank" class="recommend-link">去搜索 "${escapeHTML(mainTag)}" 相关的推荐</a>
+          </div>
+        `;
+      }
+    }
+
+    $('#btnRecommendClose').addEventListener('click', () => {
+      $('#recommendModal').classList.remove('visible');
+    });
+    $('#recommendModal').addEventListener('click', (e) => {
+      if (e.target === $('#recommendModal')) $('#recommendModal').classList.remove('visible');
+    });
 
     // ========== Search (Debounced) ==========
     let searchTimer;

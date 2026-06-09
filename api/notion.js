@@ -35,6 +35,9 @@ module.exports = async function handler(req, res) {
     if (req.method === 'POST' && action === 'add') {
       return await handleAdd(req, res);
     }
+    if (req.method === 'GET' && action === 'recommend') {
+      return await handleRecommend(req, res);
+    }
 
     return res.status(404).json({ error: '接口不存在' });
   } catch (error) {
@@ -226,4 +229,118 @@ function formatBook(page) {
     review: props['评价']?.rich_text?.[0]?.plain_text || '',
     url: page.url,
   };
+}
+
+/**
+ * 处理网页搜索推荐
+ * GET /api/notion?action=recommend&tag=xxx
+ */
+async function handleRecommend(req, res) {
+  const tag = req.query.tag || '';
+  if (!tag) return res.status(400).json({ error: '缺少 tag 参数' });
+
+  try {
+    // 构造查询：使用 tag 并加上高分、神作等关键词，同时优先搜索起点和番茄
+    const query = `${tag} 经典小说 必看 神作 豆瓣高分 site:qidian.com OR site:fanqienovel.com`;
+    
+    // 使用 DuckDuckGo Lite 进行无头搜索
+    const ddgRes = await fetch('https://lite.duckduckgo.com/lite/', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/x-www-form-urlencoded',
+        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+      },
+      body: `q=${encodeURIComponent(query)}`
+    });
+
+    if (!ddgRes.ok) {
+      throw new Error('网页搜索失败');
+    }
+
+    const html = await ddgRes.text();
+    const results = [];
+    
+    // 从 DuckDuckGo Lite 结果中提取标题和链接
+    // DDG Lite 的结果通常形如：<a class="result-snippet" href="...">...</a>
+    // 或者 <a rel="nofollow" href="...">Title</a>
+    const regex = /<a[^>]*class="result-snippet"[^>]*href="([^"]+)"[^>]*>(.*?)<\/a>|<a rel="nofollow" href="([^"]+)"[^>]*>(.*?)<\/a>/gi;
+    let match;
+    let count = 0;
+    const maxResults = 2; // 只取前两个结果
+    
+    // 由于正则是全局匹配并且有两组可能的捕获组，我们需要处理它
+    const simplifiedRegex = /<a[^>]*href="([^"]+)"[^>]*rel="nofollow"[^>]*>(.*?)<\/a>|<a[^>]*rel="nofollow"[^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/gi;
+    
+    // 更简单的通用提取方式：寻找 table class="result-results" 中的链接
+    const linkRegex = /<td class='result-snippet[^>]*>[\s\S]*?<a[^>]*href="([^"]+)"[^>]*>(.*?)<\/a>/gi;
+    
+    while ((match = simplifiedRegex.exec(html)) !== null && count < maxResults) {
+      let url = match[1] || match[3];
+      let title = match[2] || match[4];
+      
+      if (!url || !title) continue;
+
+      // 如果有 uddg 参数（DDG 的跳转链接），解析出原始链接
+      if (url.includes('uddg=')) {
+        try {
+          const uddgMatch = url.match(/uddg=([^&]+)/);
+          if (uddgMatch) {
+            url = decodeURIComponent(uddgMatch[1]);
+          }
+        } catch(e) {}
+      } else if (url.startsWith('//')) {
+        url = 'https:' + url;
+      }
+
+      // 去除标题中可能包含的 HTML 标签（如 <b>）
+      title = title.replace(/<\/?[^>]+(>|$)/g, "");
+      title = decodeHTMLEntities(title);
+
+      if (title.trim() && url.trim() && (url.includes('qidian.com') || url.includes('fanqienovel.com'))) {
+        results.push({ title: title.trim(), url: url.trim() });
+        count++;
+      }
+    }
+
+    // 如果上面针对 site 的没匹配到，可以放宽条件再匹配一次
+    if (results.length === 0) {
+      const fallbackRegex = /<a rel="nofollow" href="([^"]+)"[^>]*>(.*?)<\/a>/gi;
+      count = 0;
+      while ((match = fallbackRegex.exec(html)) !== null && count < maxResults) {
+        let url = match[1];
+        let title = match[2];
+        if (url.includes('uddg=')) {
+          try {
+            const uddgMatch = url.match(/uddg=([^&]+)/);
+            if (uddgMatch) {
+              url = decodeURIComponent(uddgMatch[1]);
+            }
+          } catch(e) {}
+        }
+        title = title.replace(/<\/?[^>]+(>|$)/g, "");
+        title = decodeHTMLEntities(title);
+        results.push({ title: title.trim(), url: url.trim() });
+        count++;
+      }
+    }
+
+    // 如果仍然没有结果（可能是触发了防爬虫验证码），直接抛出错误触发前端降级显示搜索链接
+    if (results.length === 0) {
+      throw new Error('未找到推荐结果或被防爬虫拦截');
+    }
+
+    return res.status(200).json({ results });
+  } catch (err) {
+    console.error('Recommend Error:', err);
+    return res.status(500).json({ error: '网页推荐失败' });
+  }
+}
+
+function decodeHTMLEntities(text) {
+  return text.replace(/&amp;/g, '&')
+             .replace(/&lt;/g, '<')
+             .replace(/&gt;/g, '>')
+             .replace(/&quot;/g, '"')
+             .replace(/&#39;/g, "'")
+             .replace(/&#x27;/g, "'");
 }
